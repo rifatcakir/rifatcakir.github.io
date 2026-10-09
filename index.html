@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rıfat Çakır</title>
+<meta name="description" content="Taking LLM features from pilot to production on Java and Spring. Spring AI production readiness checklist, open source and writing by Rıfat Çakır.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700;800&display=swap">
+<style>
+/* Layout: a test report. Mono labels in a narrow left rail, content to the right; one console panel anchors the hero; the checklist is the working centre of the page. */
+:root {
+  --paper: #F3F6F4;
+  --surface: #FFFFFF;
+  --ink: #13201B;
+  --muted: #54645D;
+  --line: #D3DCD7;
+  --accent: #0D7659;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEEE6;
+  --warn: #9A5A00;
+  --warn-soft: #F5E6CC;
+  --code-bg: #14211C;
+  --code-fg: #D8E5DF;
+  --code-dim: #7E948A;
+  --code-hi: #6FD3A8;
+  --display: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --step-0: 1rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  --step-4: clamp(2.25rem, 1.4rem + 3.6vw, 3.75rem);
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1412;
+    --surface: #141C19;
+    --ink: #E3ECE8;
+    --muted: #93A39C;
+    --line: #26332E;
+    --accent: #47C496;
+    --accent-ink: #0A1410;
+    --accent-soft: #15302A;
+    --warn: #E2A646;
+    --warn-soft: #33270F;
+    --code-bg: #090E0C;
+    --code-fg: #D8E5DF;
+    --code-dim: #6E8379;
+    --code-hi: #6FD3A8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1412;
+  --surface: #141C19;
+  --ink: #E3ECE8;
+  --muted: #93A39C;
+  --line: #26332E;
+  --accent: #47C496;
+  --accent-ink: #0A1410;
+  --accent-soft: #15302A;
+  --warn: #E2A646;
+  --warn-soft: #33270F;
+  --code-bg: #090E0C;
+  --code-fg: #D8E5DF;
+  --code-dim: #6E8379;
+  --code-hi: #6FD3A8;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+code, .mono { font-family: var(--mono); font-size: 0.9em; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+p { margin: 0; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+
+/* top bar */
+.bar { border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 16px; }
+.brand { font-family: var(--display); font-weight: 700; font-size: var(--step-1); color: var(--ink); text-decoration: none; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 0.9375rem; }
+.nav a { color: var(--muted); text-decoration: none; }
+.nav a:hover { color: var(--ink); }
+
+/* section scaffold: mono rail + content */
+.section { padding-block: clamp(48px, 7vw, 88px); border-bottom: 1px solid var(--line); }
+.section .wrap { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px 40px; }
+.rail { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); letter-spacing: 0.02em; padding-top: 6px; }
+.rail span { color: var(--accent); }
+@media (max-width: 760px) {
+  .section .wrap { grid-template-columns: minmax(0, 1fr); }
+  .rail { padding-top: 0; }
+}
+
+/* hero */
+.hero { padding-block: clamp(40px, 6vw, 80px) clamp(48px, 7vw, 88px); border-bottom: 1px solid var(--line); }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+@media (max-width: 900px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } }
+.eyebrow { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 18px; }
+.hero h1 { font-size: var(--step-4); font-weight: 800; max-width: 19ch; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.lede { margin-top: 22px; font-size: var(--step-1); color: var(--muted); max-width: 58ch; }
+.lede strong { color: var(--ink); font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 600 0.9375rem/1 var(--body);
+  padding: 13px 18px; border-radius: var(--radius);
+  border: 1px solid var(--accent); text-decoration: none; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink);
+}
+.btn:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--ink); filter: none; }
+.btn.small { padding: 9px 12px; font-size: 0.875rem; }
+
+/* console */
+.console {
+  background: var(--code-bg); color: var(--code-fg);
+  border-radius: 10px; font-family: var(--mono); font-size: 0.8125rem; line-height: 1.7;
+  overflow-x: auto; min-width: 0;
+}
+.console-head { display: flex; gap: 7px; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(127,148,138,0.25); color: var(--code-dim); }
+.console-head i { width: 9px; height: 9px; border-radius: 50%; background: var(--code-dim); opacity: 0.6; display: inline-block; }
+.console-head b { font-weight: 400; margin-left: 8px; }
+.console pre { margin: 0; padding: 18px 18px 20px; white-space: pre; }
+.c-dim { color: var(--code-dim); }
+.c-hi { color: var(--code-hi); }
+.c-k { color: var(--code-fg); font-weight: 600; }
+
+/* stall points */
+.lead-h { font-size: var(--step-3); font-weight: 700; max-width: 22ch; }
+.stalls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin-top: 32px; border-top: 1px solid var(--line); }
+.stall { padding: 22px 24px 22px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; }
+.stall:nth-child(odd) { border-right: 1px solid var(--line); }
+.stall:nth-child(even) { padding-left: 24px; }
+.stall .tag { font-family: var(--mono); font-size: 0.75rem; color: var(--warn); background: var(--warn-soft); padding: 2px 7px; border-radius: 4px; height: fit-content; margin-top: 3px; }
+.stall p { color: var(--ink); }
+.stall p span { display: block; color: var(--muted); font-size: 0.9375rem; margin-top: 4px; }
+@media (max-width: 640px) {
+  .stalls { grid-template-columns: minmax(0, 1fr); }
+  .stall:nth-child(odd) { border-right: 0; }
+  .stall:nth-child(even) { padding-left: 0; }
+}
+
+/* checklist */
+.check-intro { max-width: 62ch; color: var(--muted); margin-top: 14px; }
+.check-grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 40px; margin-top: 36px; align-items: start; }
+@media (max-width: 900px) { .check-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+.summary {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px;
+}
+@media (max-width: 900px) { .summary { position: static; } }
+.score { display: flex; align-items: baseline; gap: 8px; }
+.score b { font-family: var(--display); font-size: 3rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.score span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 8px; background: var(--accent-soft); border-radius: 99px; margin-top: 14px; overflow: hidden; }
+.meter div { height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width 0.3s ease; }
+.stage { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: 0.75rem; padding: 4px 9px; border-radius: 4px; letter-spacing: 0.03em; }
+.stage[data-stage="pilot"] { background: var(--warn-soft); color: var(--warn); }
+.stage[data-stage="hardening"] { background: var(--accent-soft); color: var(--accent); }
+.stage[data-stage="ready"] { background: var(--accent); color: var(--accent-ink); }
+.stage-note { font-size: 0.875rem; color: var(--muted); margin-top: 10px; }
+.areas { list-style: none; padding: 0; margin: 20px 0 0; border-top: 1px solid var(--line); }
+.areas li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 0.875rem; }
+.areas li a { color: var(--ink); text-decoration: none; }
+.areas li a:hover { color: var(--accent); }
+.areas li span { font-family: var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.areas li.full span { color: var(--accent); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.copy-out { margin-top: 12px; width: 100%; min-height: 140px; font-family: var(--mono); font-size: 0.75rem; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; }
+.status-line { font-size: 0.8125rem; color: var(--accent); margin-top: 10px; min-height: 1.2em; }
+.privacy { font-size: 0.8125rem; color: var(--muted); margin-top: 14px; }
+
+.area + .area { margin-top: 36px; }
+.area h3 { font-size: var(--step-2); font-weight: 700; display: flex; align-items: baseline; gap: 12px; scroll-margin-top: 24px; }
+.area h3 small { font-family: var(--mono); font-size: 0.8125rem; font-weight: 400; color: var(--muted); }
+.items { list-style: none; padding: 0; margin: 14px 0 0; border-top: 1px solid var(--line); }
+.item { border-bottom: 1px solid var(--line); }
+.item label { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 14px 4px; cursor: pointer; }
+.item input { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; margin: 3px 0 0; border: 1.5px solid var(--muted); border-radius: 4px; background: var(--surface); display: grid; place-content: center; cursor: pointer; }
+.item input::after { content: ""; width: 10px; height: 6px; border-left: 2px solid var(--accent-ink); border-bottom: 2px solid var(--accent-ink); transform: rotate(-45deg) translate(1px, -1px); opacity: 0; }
+.item input:checked { background: var(--accent); border-color: var(--accent); }
+.item input:checked::after { opacity: 1; }
+.item .t { color: var(--ink); }
+.item .n { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
+.item input:checked + span .t { color: var(--muted); }
+.item label:hover .t { color: var(--accent); }
+
+/* open source */
+.oss { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; margin-top: 8px; }
+@media (max-width: 900px) { .oss { grid-template-columns: minmax(0, 1fr); } }
+.oss h2 { font-size: var(--step-3); font-weight: 700; }
+.oss .sub { color: var(--muted); margin-top: 12px; max-width: 56ch; }
+.facts { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; }
+.facts li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; }
+.facts li::before { content: "✓"; color: var(--accent); font-weight: 600; }
+.meta-line { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); margin-top: 20px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 16px; font-weight: 500; }
+.oss .console pre { font-size: 0.8125rem; }
+
+/* writing */
+.list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+.list li { padding: 18px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; }
+.list .kind { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); padding-top: 3px; }
+.list h3 { font-size: var(--step-1); font-weight: 700; line-height: 1.35; }
+.list h3 a { color: var(--ink); text-decoration: none; }
+.list h3 a:hover { color: var(--accent); }
+.list p { color: var(--muted); font-size: 0.9375rem; margin-top: 4px; }
+@media (max-width: 560px) { .list li { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+
+/* experience */
+.exp { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.exp li { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.exp .org { font-family: var(--display); font-weight: 700; font-size: var(--step-1); }
+.exp .org small { display: block; font-family: var(--mono); font-weight: 400; font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.exp p { color: var(--ink); }
+@media (max-width: 560px) { .exp li { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+
+/* contact */
+.contact h2 { font-size: var(--step-3); font-weight: 700; max-width: 20ch; }
+.contact p.sub { color: var(--muted); margin-top: 14px; max-width: 58ch; }
+.mail { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 26px; }
+.mail output { font-family: var(--mono); font-size: var(--step-1); user-select: all; background: var(--surface); border: 1px solid var(--line); padding: 10px 14px; border-radius: var(--radius); }
+
+footer { padding-block: 28px 40px; color: var(--muted); font-size: 0.875rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top" id="top">Rıfat Çakır</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#checklist">Checklist</a>
+      <a href="#open-source">Open source</a>
+      <a href="#writing">Writing</a>
+      <a href="#experience">Experience</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Java · Spring Boot 4 · Spring AI 2.0</p>
+        <h1>Taking LLM features from pilot to <em>production</em> on Java and Spring.</h1>
+        <p class="lede">I'm a senior backend engineer in the Netherlands with almost a decade in <strong>banking and e-commerce</strong>. I build and test GenAI features on Spring, and I maintain <strong>spring-ai-test-tools</strong>, an open-source record-and-replay library for Spring AI.</p>
+        <div class="actions">
+          <a class="btn" href="#checklist">Run the readiness checklist</a>
+          <a class="btn ghost" href="#contact">Get in touch</a>
+        </div>
+      </div>
+      <figure class="console" style="margin:0" aria-label="How record and replay works for Spring AI tests">
+        <div class="console-head"><i></i><i></i><i></i><b>./mvnw test</b></div>
+<pre><span class="c-dim"># first run: slow, costs tokens, needs network</span>
+<span class="c-k">test</span> ─▶ ChatClient ─▶ <span class="c-k">real model</span>
+                     └─ writes ─▶ cassette.json
+
+<span class="c-dim"># every run after: offline, $0</span>
+<span class="c-k">test</span> ─▶ ChatClient ◀─ reads ── cassette.json
+
+<span class="c-hi">✓ OrderStatusTest</span>          <span class="c-dim">0.8 ms</span>
+<span class="c-hi">✓ RefundToolTest</span>           <span class="c-dim">no side effects</span>
+<span class="c-hi">✓ RelevancyEvalTest</span>        <span class="c-dim">judge replayed</span></pre>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="stall-h">
+    <div class="wrap">
+      <p class="rail">where pilots <span>stall</span></p>
+      <div>
+        <h2 class="lead-h" id="stall-h">The demo works. These four things decide whether it ships.</h2>
+        <div class="stalls">
+          <div class="stall"><span class="tag">tests</span><p>Tests call a live model.<span>They are slow, cost tokens on every run and fail at random.</span></p></div>
+          <div class="stall"><span class="tag">evals</span><p>Nobody can say if a prompt change helped.<span>Without a golden set, every change is a guess.</span></p></div>
+          <div class="stall"><span class="tag">tools</span><p>Tools can take real actions.<span>Guardrails written for a demo don't survive real users.</span></p></div>
+          <div class="stall"><span class="tag">platform</span><p>Spring Boot 3.5 is out of open-source support.<span>Spring AI 2.0 needs Boot 4, and the move changes code.</span></p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="checklist" aria-labelledby="check-h">
+    <div class="wrap">
+      <p class="rail">readiness <span>checklist</span></p>
+      <div style="min-width:0">
+        <h2 class="lead-h" id="check-h">Spring AI production readiness: 32 checks</h2>
+        <p class="check-intro">Tick what is true for your system today. The score updates as you go, and you can copy the result as Markdown for your team or your backlog.</p>
+        <div class="check-grid">
+          <aside class="summary" aria-label="Your score">
+            <div class="score"><b id="done">0</b><span>/ <span id="total">32</span> ready</span></div>
+            <div class="meter" role="progressbar" aria-label="Checks completed" aria-valuemin="0" aria-valuemax="32" aria-valuenow="0" id="meter"><div id="meter-fill"></div></div>
+            <span class="stage" id="stage" data-stage="pilot">PILOT</span>
+            <p class="stage-note" id="stage-note">Works in a demo. Expect surprises in production.</p>
+            <ul class="areas" id="area-list"></ul>
+            <div class="tools">
+              <button class="btn small" type="button" id="copy-btn">Copy as Markdown</button>
+              <button class="btn small ghost" type="button" id="reset-btn">Reset</button>
+            </div>
+            <p class="status-line" id="status" role="status" aria-live="polite"></p>
+            <textarea class="copy-out" id="copy-out" readonly hidden aria-label="Checklist as Markdown"></textarea>
+            <p class="privacy">Your ticks stay in this browser. Nothing is sent anywhere.</p>
+          </aside>
+          <div id="areas" style="min-width:0"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="open-source" aria-labelledby="oss-h">
+    <div class="wrap">
+      <p class="rail">open <span>source</span></p>
+      <div class="oss">
+        <div>
+          <h2 id="oss-h">spring-ai-test-tools</h2>
+          <p class="sub">Record a real model interaction once, commit it, and replay it in under a millisecond on every run. It works at Spring AI's level, above HTTP, so the code under test does not change.</p>
+          <ul class="facts">
+            <li><span>Tool calls replay their recorded results without running the real method.</span></li>
+            <li><span>Streaming replays chunk by chunk, tool-call fragments included.</span></li>
+            <li><span>Structured output and embeddings are cached by their exact request.</span></li>
+            <li><span>Spring AI's own evaluators run deterministically in CI.</span></li>
+            <li><span>Replay-only mode turns a missing recording into a failed build.</span></li>
+          </ul>
+          <p class="meta-line">Apache-2.0 · 0.1.0 · Java 21 · Spring Boot 4.0 · Spring AI 2.0</p>
+          <div class="links">
+            <a href="https://github.com/rifatcakir/spring-ai-test-tools">Repository</a>
+            <a href="https://rifatcakir.github.io/spring-ai-test-tools">Documentation</a>
+            <a href="https://github.com/rifatcakir/spring-ai-test-tools-example">Examples</a>
+          </div>
+        </div>
+        <figure class="console" style="margin:0" aria-label="Maven dependency and test configuration">
+          <div class="console-head"><i></i><i></i><i></i><b>pom.xml · application-test.yml</b></div>
+<pre><span class="c-dim">&lt;!-- pom.xml --&gt;</span>
+&lt;dependency&gt;
+  &lt;groupId&gt;<span class="c-hi">io.github.rifatcakir</span>&lt;/groupId&gt;
+  &lt;artifactId&gt;<span class="c-hi">spring-ai-test-tools</span>&lt;/artifactId&gt;
+  &lt;version&gt;0.1.0&lt;/version&gt;
+  &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+
+<span class="c-dim"># application-test.yml</span>
+spring:
+  ai:
+    test:
+      vcr:
+        enabled: <span class="c-hi">true</span>
+        mode: <span class="c-hi">REPLAY_ONLY</span>   <span class="c-dim"># in CI</span></pre>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="writing" aria-labelledby="writing-h">
+    <div class="wrap">
+      <p class="rail">writing &amp; <span>talks</span></p>
+      <div>
+        <h2 class="lead-h" id="writing-h" style="margin-bottom:24px">Writing and talks</h2>
+        <ul class="list">
+          <li>
+            <span class="kind">article · Aug 2026</span>
+            <div>
+              <h3><a href="https://dev.to/rifatcakir/your-spring-ai-tests-are-slow-flaky-and-cost-money-heres-how-to-make-them-deterministic-1og7">Your Spring AI tests are slow, flaky, and cost money. Here's how to make them deterministic.</a></h3>
+              <p>Why Mockito and WireMock both hurt for LLM calls, and what record-and-replay at the ChatClient level fixes.</p>
+            </div>
+          </li>
+          <li>
+            <span class="kind">article · Aug 2026</span>
+            <div>
+              <h3><a href="https://dev.to/rifatcakir/mocking-spring-ai-tool-calls-via-recordreplay-1lj4">Mocking Spring AI @Tool calls via record/replay</a></h3>
+              <p>Replaying an agent's tool calls without firing their side effects, intercepted at the ToolCallingManager.</p>
+            </div>
+          </li>
+          <li>
+            <span class="kind">talk</span>
+            <div>
+              <h3>The Human Side of Technical Debt: How Team Culture Becomes Your Architecture</h3>
+              <p>ABN AMRO DevCon. Cognitive load, loss aversion and the sunk cost fallacy, applied to real codebases.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="experience" aria-labelledby="exp-h">
+    <div class="wrap">
+      <p class="rail"><span>experience</span></p>
+      <div>
+        <h2 class="lead-h" id="exp-h" style="margin-bottom:24px">Where I've built things</h2>
+        <ul class="exp">
+          <li><div class="org">ABN AMRO<small>now · senior software engineer</small></div><p>Redesigned the team's core microservices architecture and built a risk-analysis service for the credit department. Run internal sessions on GenAI and MCP.</p></li>
+          <li><div class="org">bol.com<small>backend engineer</small></div><p>Led the decomposition of a monolith into domain-oriented microservices on Google Cloud.</p></li>
+          <li><div class="org">ING<small>platform engineering</small></div><p>Built Spring-based frameworks used by development teams across the bank.</p></li>
+          <li><div class="org">Netaş<small>software engineer</small></div><p>Built an automated test suite that cut test execution time by 20%.</p></li>
+          <li><div class="org">M.Sc.<small>education</small></div><p>Data Science and Machine Learning.</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section contact" id="contact" aria-labelledby="contact-h" style="border-bottom:0">
+    <div class="wrap">
+      <p class="rail"><span>contact</span></p>
+      <div>
+        <h2 id="contact-h">Building GenAI on Spring? Let's compare notes.</h2>
+        <p class="sub">I'm happy to talk about testing, evaluating and running LLM features on the JVM, and to speak at meetups. Send me a message on LinkedIn, or open an issue on GitHub if you found a gap in the checklist.</p>
+        <div class="actions">
+          <a class="btn" href="https://www.linkedin.com/in/rifatcakir/">Message me on LinkedIn</a>
+          <a class="btn ghost" href="https://github.com/rifatcakir/spring-ai-test-tools/issues">Open an issue</a>
+        </div>
+        <div class="links" style="margin-top:22px">
+          <a href="https://www.linkedin.com/in/rifatcakir/">LinkedIn</a>
+          <a href="https://github.com/rifatcakir">GitHub</a>
+          <a href="https://dev.to/rifatcakir">dev.to</a>
+          <a href="https://medium.com/@rifatcakira">Medium</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Rıfat Çakır · Netherlands</span>
+    <span>Independent writing. Views are my own.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var AREAS = [
+    { id: 'platform', title: 'Platform and upgrade path', items: [
+      ['p1', 'You know your support dates.', 'Spring Boot 3.5 and Spring Framework 6.2 left open-source support on 30 June 2026. Boot 4.0\'s window closes at the end of 2026.'],
+      ['p2', 'Spring AI comes from the BOM, pinned to one version across services.'],
+      ['p3', 'The move from Spring AI 1.x to 2.0 is planned as a project.', 'Boot 4, Jackson 3, immutable option builders and tool calling through ToolCallingAdvisor all change code.'],
+      ['p4', 'Model name and version are pinned in config and logged with every response.'],
+      ['p5', 'Provider settings differ per environment and none of them live in code.']
+    ]},
+    { id: 'tests', title: 'Deterministic tests', items: [
+      ['t1', 'Unit and slice tests never call a live model.'],
+      ['t2', 'Model interactions are recorded once and replayed in CI.', 'CI runs in replay-only mode, so a missing recording fails the build instead of calling the model.'],
+      ['t3', 'Replayed tool calls never run real side effects.', 'No emails sent, no rows written.'],
+      ['t4', 'Structured output is tested against its target type, including malformed responses.'],
+      ['t5', 'Streaming responses are tested chunk by chunk.'],
+      ['t6', 'One real integration test against the provider runs before each release.', 'Not on every commit.'],
+      ['t7', 'The unit-test pipeline holds no provider API keys.']
+    ]},
+    { id: 'evals', title: 'Evaluation', items: [
+      ['e1', 'A golden set of real user questions exists, with the expected outcome for each.'],
+      ['e2', 'Assertions pin the decision, not the wording.', 'Which action, which category, which source. The prose may vary.'],
+      ['e3', 'Relevance and factuality are checked automatically.', 'For example with Spring AI\'s RelevancyEvaluator and FactCheckingEvaluator.'],
+      ['e4', 'The eval set covers ambiguous inputs, tool misuse and authorization edge cases.'],
+      ['e5', 'A scheduled drift check runs the evals against the live model.', 'It alerts when scores drop.'],
+      ['e6', 'No prompt or model change ships without an eval run.']
+    ]},
+    { id: 'tools', title: 'Tools and agents', items: [
+      ['a1', 'Each tool has the narrowest permissions it needs and checks the calling user\'s rights.'],
+      ['a2', 'Tools with side effects are idempotent or guarded against repeats.'],
+      ['a3', 'Irreversible actions wait for a human to confirm.'],
+      ['a4', 'Tool-calling loops have hard limits on iterations, time and tokens.'],
+      ['a5', 'MCP servers you expose or call are authenticated.', 'OAuth 2.0 or API keys.']
+    ]},
+    { id: 'guardrails', title: 'Guardrails and data', items: [
+      ['g1', 'Personal data is masked before it reaches a prompt, unless your provider contract covers it.'],
+      ['g2', 'Retrieved documents and tool results are treated as data, never as instructions.'],
+      ['g3', 'Model output is validated before use.', 'Invalid output triggers a retry or a safe fallback.'],
+      ['g4', 'Users get a clear fallback when the model refuses, times out or the provider is down.']
+    ]},
+    { id: 'observability', title: 'Observability and cost', items: [
+      ['o1', 'Every model and tool call emits traces and metrics.', 'Micrometer and OpenTelemetry.'],
+      ['o2', 'Token use and cost are visible per feature, not only per account.'],
+      ['o3', 'Each call has a latency budget, a timeout and handling for HTTP 429.'],
+      ['o4', 'An audit trail links each answer to its prompt version, model version and sources.'],
+      ['o5', 'The feature has a named owner and a classification under your AI policy and the EU AI Act.']
+    ]}
+  ];
+  var STAGES = [
+    { max: 12, key: 'pilot', label: 'PILOT', note: 'Works in a demo. Expect surprises in production.' },
+    { max: 25, key: 'hardening', label: 'HARDENING', note: 'The basics are there. Close the gaps in evaluation and tools first.' },
+    { max: 32, key: 'ready', label: 'PRODUCTION-READY', note: 'You can change prompts and models without guessing.' }
+  ];
+  var KEY = 'rc-readiness-v1';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var host = document.getElementById('areas');
+  var list = document.getElementById('area-list');
+  var total = 0;
+  AREAS.forEach(function (area) {
+    var sec = document.createElement('section');
+    sec.className = 'area';
+    var h = document.createElement('h3');
+    h.id = 'area-' + area.id;
+    h.innerHTML = area.title + ' <small id="count-' + area.id + '"></small>';
+    sec.appendChild(h);
+    var ul = document.createElement('ul');
+    ul.className = 'items';
+    area.items.forEach(function (it) {
+      total++;
+      var li = document.createElement('li');
+      li.className = 'item';
+      var label = document.createElement('label');
+      var box = document.createElement('input');
+      box.type = 'checkbox';
+      box.id = 'chk-' + it[0];
+      box.checked = !!state[it[0]];
+      box.addEventListener('change', function () {
+        if (box.checked) { state[it[0]] = true; } else { delete state[it[0]]; }
+        save(); update();
+      });
+      var span = document.createElement('span');
+      var t = document.createElement('span');
+      t.className = 't';
+      t.textContent = it[1];
+      span.appendChild(t);
+      if (it[2]) {
+        var n = document.createElement('span');
+        n.className = 'n';
+        n.textContent = it[2];
+        span.appendChild(n);
+      }
+      label.appendChild(box);
+      label.appendChild(span);
+      li.appendChild(label);
+      ul.appendChild(li);
+    });
+    sec.appendChild(ul);
+    host.appendChild(sec);
+    var row = document.createElement('li');
+    row.id = 'row-' + area.id;
+    row.innerHTML = '<a href="#area-' + area.id + '">' + area.title + '</a><span id="side-' + area.id + '"></span>';
+    list.appendChild(row);
+  });
+  document.getElementById('total').textContent = total;
+
+  function update() {
+    var done = 0;
+    AREAS.forEach(function (area) {
+      var d = area.items.filter(function (it) { return state[it[0]]; }).length;
+      done += d;
+      var txt = d + '/' + area.items.length;
+      document.getElementById('count-' + area.id).textContent = txt;
+      document.getElementById('side-' + area.id).textContent = txt;
+      document.getElementById('row-' + area.id).classList.toggle('full', d === area.items.length);
+    });
+    document.getElementById('done').textContent = done;
+    document.getElementById('meter-fill').style.width = (done / total * 100) + '%';
+    document.getElementById('meter').setAttribute('aria-valuenow', done);
+    var st = STAGES.filter(function (s) { return done <= s.max; })[0];
+    var chip = document.getElementById('stage');
+    chip.dataset.stage = st.key;
+    chip.textContent = st.label;
+    document.getElementById('stage-note').textContent = st.note;
+  }
+  update();
+
+  function markdown() {
+    var done = Object.keys(state).length;
+    var lines = ['# Spring AI production readiness: ' + done + '/' + total, ''];
+    AREAS.forEach(function (area) {
+      lines.push('## ' + area.title);
+      area.items.forEach(function (it) {
+        lines.push('- [' + (state[it[0]] ? 'x' : ' ') + '] ' + it[1]);
+      });
+      lines.push('');
+    });
+    lines.push('Checklist by Rıfat Çakır · github.com/rifatcakir');
+    return lines.join('\n');
+  }
+  var status = document.getElementById('status');
+  var out = document.getElementById('copy-out');
+  function showFallback(text, el) {
+    el.hidden = false; el.value = text; el.focus(); el.select();
+    status.textContent = 'Selected. Press Ctrl+C or Cmd+C to copy.';
+  }
+  document.getElementById('copy-btn').addEventListener('click', function () {
+    var text = markdown();
+    out.hidden = true;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        status.textContent = 'Copied as Markdown.';
+      }, function () { showFallback(text, out); });
+    } else { showFallback(text, out); }
+  });
+  var armed = false;
+  var resetBtn = document.getElementById('reset-btn');
+  resetBtn.addEventListener('click', function () {
+    if (!armed) {
+      armed = true; resetBtn.textContent = 'Click again to clear';
+      setTimeout(function () { armed = false; resetBtn.textContent = 'Reset'; }, 3000);
+      return;
+    }
+    armed = false; resetBtn.textContent = 'Reset';
+    state = {}; save();
+    document.querySelectorAll('.item input').forEach(function (b) { b.checked = false; });
+    update(); status.textContent = 'Cleared.';
+  });
+})();
+</script>
+
+</body>
+</html>
